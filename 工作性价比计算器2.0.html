@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作性价比计算器</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #3b82f6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --text-color: #1f2937;
+            --bg-color: #f9fafb;
+            --card-color: #ffffff;
+            --border-color: #e5e7eb;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        
+        .container {
+            background-color: var(--card-color);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--primary-color);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            background-color: var(--card-color);
+            transition: border-color 0.2s;
+        }
+        
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .row {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .col {
+            flex: 1;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 10px;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        button.secondary {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+        
+        button.secondary:hover {
+            background-color: var(--border-color);
+        }
+        
+        .result-container {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: var(--bg-color);
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .result-value {
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        .good {
+            color: var(--success-color);
+        }
+        
+        .bad {
+            color: var(--danger-color);
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        th {
+            font-weight: 500;
+            color: #6b7280;
+        }
+        
+        .weight-input {
+            width: 60px;
+            text-align: center;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>工作性价比计算器</h1>
+        
+        <div class="row">
+            <div class="col">
+                <div class="form-group">
+                    <label for="salary">月薪 (元)</label>
+                    <input type="number" id="salary" value="10000">
+                </div>
+                
+                <div class="form-group">
+                    <label for="bonus">奖金/补贴 (元)</label>
+                    <input type="number" id="bonus" value="2000">
+                </div>
+                
+                <div class="form-group">
+                    <label for="workHours">每月工作小时数</label>
+                    <input type="number" id="workHours" value="176">
+                </div>
+                
+                <div class="form-group">
+                    <label for="overtime">每月加班小时数</label>
+                    <input type="number" id="overtime" value="20">
+                </div>
+            </div>
+            
+            <div class="col">
+                <div class="form-group">
+                    <label for="commuteTime">每日通勤时间 (分钟)</label>
+                    <input type="number" id="commuteTime" value="60">
+                </div>
+                
+                <div class="form-group">
+                    <label for="commuteCost">每月通勤费用 (元)</label>
+                    <input type="number" id="commuteCost" value="300">
+                </div>
+                
+                <div class="form-group">
+                    <label for="stressLevel">工作压力 (1-10分)</label>
+                    <input type="number" id="stressLevel" value="5" min="1" max="10">
+                </div>
+                
+                <div class="form-group">
+                    <label for="development">职业发展前景 (1-10分)</label>
+                    <input type="number" id="development" value="7" min="1" max="10">
+                </div>
+            </div>
+        </div>
+        
+        <h3>权重设置 (1-10分)</h3>
+        <table>
+            <tr>
+                <th>因素</th>
+                <th>权重</th>
+            </tr>
+            <tr>
+                <td>收入</td>
+                <td><input type="number" class="weight-input" id="weightSalary" value="8" min="1" max="10"></td>
+            </tr>
+            <tr>
+                <td>工作时间</td>
+                <td><input type="number" class="weight-input" id="weightHours" value="7" min="1" max="10"></td>
+            </tr>
+            <tr>
+                <td>通勤</td>
+                <td><input type="number" class="weight-input" id="weightCommute" value="6" min="1" max="10"></td>
+            </tr>
+            <tr>
+                <td>工作压力</td>
+                <td><input type="number" class="weight-input" id="weightStress" value="5" min="1" max="10"></td>
+            </tr>
+            <tr>
+                <td>职业发展</td>
+                <td><input type="number" class="weight-input" id="weightDev" value="6" min="1" max="10"></td>
+            </tr>
+        </table>
+        
+        <div class="buttons">
+            <button id="calculateBtn">计算性价比</button>
+            <button class="secondary" id="resetBtn">重置</button>
+        </div>
+        
+        <div class="result-container" id="resultContainer">
+            <h2>计算结果</h2>
+            <div class="result-value" id="resultValue">0.00</div>
+            
+            <table>
+                <tr>
+                    <th>因素</th>
+                    <th>得分</th>
+                    <th>加权得分</th>
+                </tr>
+                <tr>
+                    <td>收入</td>
+                    <td id="scoreSalary">0</td>
+                    <td id="weightedSalary">0</td>
+                </tr>
+                <tr>
+                    <td>工作时间</td>
+                    <td id="scoreHours">0</td>
+                    <td id="weightedHours">0</td>
+                </tr>
+                <tr>
+                    <td>通勤</td>
+                    <td id="scoreCommute">0</td>
+                    <td id="weightedCommute">0</td>
+                </tr>
+                <tr>
+                    <td>工作压力</td>
+                    <td id="scoreStress">0</td>
+                    <td id="weightedStress">0</td>
+                </tr>
+                <tr>
+                    <td>职业发展</td>
+                    <td id="scoreDev">0</td>
+                    <td id="weightedDev">0</td>
+                </tr>
+            </table>
+            
+            <div class="buttons">
+                <button id="exportBtn">导出Excel</button>
+            </div>
+        </div>
+        
+        <div class="footer">
+            工作性价比 = (收入得分×权重 + 工作时间得分×权重 + 通勤得分×权重 + 工作压力得分×权重 + 职业发展得分×权重) / 总权重
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('calculateBtn').addEventListener('click', calculate);
+        document.getElementById('resetBtn').addEventListener('click', reset);
+        document.getElementById('exportBtn').addEventListener('click', exportToExcel);
+        
+        function calculate() {
+            // 获取输入值
+            const salary = parseFloat(document.getElementById('salary').value) || 0;
+            const bonus = parseFloat(document.getElementById('bonus').value) || 0;
+            const workHours = parseFloat(document.getElementById('workHours').value) || 1;
+            const overtime = parseFloat(document.getElementById('overtime').value) || 0;
+            const commuteTime = parseFloat(document.getElementById('commuteTime').value) || 0;
+            const commuteCost = parseFloat(document.getElementById('commuteCost').value) || 0;
+            const stressLevel = parseFloat(document.getElementById('stressLevel').value) || 1;
+            const development = parseFloat(document.getElementById('development').value) || 1;
+            
+            // 获取权重
+            const weightSalary = parseFloat(document.getElementById('weightSalary').value) || 1;
+            const weightHours = parseFloat(document.getElementById('weightHours').value) || 1;
+            const weightCommute = parseFloat(document.getElementById('weightCommute').value) || 1;
+            const weightStress = parseFloat(document.getElementById('weightStress').value) || 1;
+            const weightDev = parseFloat(document.getElementById('weightDev').value) || 1;
+            
+            // 计算各项得分 (标准化到1-10分)
+            // 收入得分 (每万元1分，上限10分)
+            const income = salary + bonus;
+            const scoreIncome = Math.min(income / 10000, 10);
+            
+            // 工作时间得分 (每周40小时为基准5分，每增加10小时减1分，每减少10小时加1分)
+            const totalHours = workHours + overtime;
+            const weeklyHours = totalHours / 4; // 近似计算
+            const scoreHours = Math.max(1, Math.min(10, 5 + (40 - weeklyHours)/10));
+            
+            // 通勤得分 (每日30分钟为基准5分，每增加15分钟减1分，每减少15分钟加1分)
+            const dailyCommute = commuteTime / 5; // 工作日通勤
+            const scoreCommute = Math.max(1, Math.min(10, 5 + (30 - dailyCommute)/15));
+            
+            // 工作压力得分 (直接取反)
+            const scoreStress = 11 - stressLevel; // 1-10转换为10-1
+            
+            // 职业发展得分 (直接使用)
+            const scoreDev = development;
+            
+            // 计算加权总分
+            const totalWeight = weightSalary + weightHours + weightCommute + weightStress + weightDev;
+            const weightedScore = (
+                scoreIncome * weightSalary +
+                scoreHours * weightHours +
+                scoreCommute * weightCommute +
+                scoreStress * weightStress +
+                scoreDev * weightDev
+            ) / totalWeight;
+            
+            // 显示结果
+            document.getElementById('scoreSalary').textContent = scoreIncome.toFixed(2);
+            document.getElementById('scoreHours').textContent = scoreHours.toFixed(2);
+            document.getElementById('scoreCommute').textContent = scoreCommute.toFixed(2);
+            document.getElementById('scoreStress').textContent = scoreStress.toFixed(2);
+            document.getElementById('scoreDev').textContent = scoreDev.toFixed(2);
+            
+            document.getElementById('weightedSalary').textContent = (scoreIncome * weightSalary).toFixed(2);
+            document.getElementById('weightedHours').textContent = (scoreHours * weightHours).toFixed(2);
+            document.getElementById('weightedCommute').textContent = (scoreCommute * weightCommute).toFixed(2);
+            document.getElementById('weightedStress').textContent = (scoreStress * weightStress).toFixed(2);
+            document.getElementById('weightedDev').textContent = (scoreDev * weightDev).toFixed(2);
+            
+            const resultElement = document.getElementById('resultValue');
+            resultElement.textContent = weightedScore.toFixed(2);
+            
+            // 根据分数设置颜色
+            if (weightedScore >= 7) {
+                resultElement.className = 'result-value good';
+            } else if (weightedScore >= 4) {
+                resultElement.className = 'result-value';
+            } else {
+                resultElement.className = 'result-value bad';
+            }
+            
+            // 显示结果容器
+            document.getElementById('resultContainer').style.display = 'block';
+        }
+        
+        function reset() {
+            document.getElementById('salary').value = '10000';
+            document.getElementById('bonus').value = '2000';
+            document.getElementById('workHours').value = '176';
+            document.getElementById('overtime').value = '20';
+            document.getElementById('commuteTime').value = '60';
+            document.getElementById('commuteCost').value = '300';
+            document.getElementById('stressLevel').value = '5';
+            document.getElementById('development').value = '7';
+            
+            document.getElementById('weightSalary').value = '8';
+            document.getElementById('weightHours').value = '7';
+            document.getElementById('weightCommute').value = '6';
+            document.getElementById('weightStress').value = '5';
+            document.getElementById('weightDev').value = '6';
+            
+            document.getElementById('resultContainer').style.display = 'none';
+        }
+        
+        function exportToExcel() {
+            // 准备数据
+            const data = [
+                ['工作性价比计算结果', '', ''],
+                ['计算时间', new Date().toLocaleString(), ''],
+                ['', '', ''],
+                ['输入参数', '值', ''],
+                ['月薪 (元)', document.getElementById('salary').value, ''],
+                ['奖金/补贴 (元)', document.getElementById('bonus').value, ''],
+                ['每月工作小时数', document.getElementById('workHours').value, ''],
+                ['每月加班小时数', document.getElementById('overtime').value, ''],
+                ['每日通勤时间 (分钟)', document.getElementById('commuteTime').value, ''],
+                ['每月通勤费用 (元)', document.getElementById('commuteCost').value, ''],
+                ['工作压力 (1-10分)', document.getElementById('stressLevel').value, ''],
+                ['职业发展前景 (1-10分)', document.getElementById('development').value, ''],
+                ['', '', ''],
+                ['权重设置', '值', ''],
+                ['收入权重', document.getElementById('weightSalary').value, ''],
+                ['工作时间权重', document.getElementById('weightHours').value, ''],
+                ['通勤权重', document.getElementById('weightCommute').value, ''],
+                ['工作压力权重', document.getElementById('weightStress').value, ''],
+                ['职业发展权重', document.getElementById('weightDev').value, ''],
+                ['', '', ''],
+                ['计算结果', '得分', '加权得分'],
+                ['收入得分', document.getElementById('scoreSalary').textContent, document.getElementById('weightedSalary').textContent],
+                ['工作时间得分', document.getElementById('scoreHours').textContent, document.getElementById('weightedHours').textContent],
+                ['通勤得分', document.getElementById('scoreCommute').textContent, document.getElementById('weightedCommute').textContent],
+                ['工作压力得分', document.getElementById('scoreStress').textContent, document.getElementById('weightedStress').textContent],
+                ['职业发展得分', document.getElementById('scoreDev').textContent, document.getElementById('weightedDev').textContent],
+                ['', '', ''],
+                ['总性价比', document.getElementById('resultValue').textContent, '']
+            ];
+            
+            // 创建工作簿
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            
+            // 设置列宽
+            ws['!cols'] = [
+                { wch: 20 }, // 第一列宽度
+                { wch: 15 }, // 第二列宽度
+                { wch: 15 }  // 第三列宽度
+            ];
+            
+            // 添加工作表到工作簿
+            XLSX.utils.book_append_sheet(wb, ws, "工作性价比");
+            
+            // 导出Excel文件
+            XLSX.writeFile(wb, "工作性价比计算.xlsx");
+        }
+        
+        // 页面加载时自动计算一次
+        window.addEventListener('load', calculate);
+    </script>
+</body>
+</html>
